@@ -10,3 +10,11 @@ Data Sourse:
 2. Package for AIDS-modeling
 3. Packege for political statistics
 4. Replication of "Основы моделирования экономического поведения домохозяйств на базе данных RLMS-HSE. (2020). Россия: ЛитРес."
+-------------------------------------------------------------------------------
+
+2. Package for AIDS-modeling
+
+Необходимо произвести репликацию пакета micEconAIDS (R) на Python
+
+
+
