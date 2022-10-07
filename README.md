@@ -8,13 +8,18 @@ Data Sourse:
 План:
 1. Package for general data-handling (Households and Individuals)
 2. Package for AIDS-modeling
-3. Packege for political statistics
+3. Packаge for political statistics
 4. Replication of "Основы моделирования экономического поведения домохозяйств на базе данных RLMS-HSE. (2020). Россия: ЛитРес."
 -------------------------------------------------------------------------------
 
 2. Package for AIDS-modeling
 
-Необходимо произвести репликацию пакета micEconAIDS (R) на Python
+Необходимо произвести репликацию пакета micEconAIDS (R) на Python. И написать читебельную документацию. 
+
+-------------------------------------------------------------------------------
+
+3. Packаge for political statistics
+
 
 
 
