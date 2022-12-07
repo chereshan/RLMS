@@ -3,6 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+План:
+1. Написать базу для библиотеки
+2. Создать обходы проблем, связанные с названиями папок и файлов
+3. Закончить дата-хендлер для ДХ
+4. Закончить дата-хендлер для индивидов
+5. 
+
+
+
 Welcome to RLMS-HSE's documentation!
 ====================================
 
