@@ -2,7 +2,7 @@
    sphinx-quickstart on Thu Oct 13 12:50:01 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
-./make html
+
 
 План:
 1. Написать базу для библиотеки
@@ -11,20 +11,15 @@
 4. Закончить дата-хендлер для индивидов
 5. 
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Темы:
-
-   RLMS-HSE
-
 Welcome to RLMS-HSE's documentation!
 ====================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Разделы:
-   Разделы/RLMS-HSE_AIDS.ipynb
-
+   Разделы/RLMS-HSE_AIDS
+   Разделы/RLMS-HSE_MARRIAGE
+   Разделы/RLMS-HSE_POLITICAL
    
 
 
