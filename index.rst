@@ -4,22 +4,25 @@
    contain the root `toctree` directive.
 
 
+
+
+Welcome to RLMS-HSE's documentation!
+====================================
 План:
 1. Написать базу для библиотеки
 2. Создать обходы проблем, связанные с названиями папок и файлов
 3. Закончить дата-хендлер для ДХ
 4. Закончить дата-хендлер для индивидов
-5. 
 
-Welcome to RLMS-HSE's documentation!
-====================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Разделы:
-   Разделы/RLMS-HSE_AIDS
-   Разделы/RLMS-HSE_MARRIAGE
-   Разделы/RLMS-HSE_POLITICAL
+
+   Разделы/RLMS_HSE_AIDS
+   Разделы/RLMS_HSE_MARRIAGE
+   Разделы/RLMS_HSE_POLITICAL
+
    
 
 
