@@ -16,7 +16,7 @@ Welcome to RLMS-HSE's documentation!
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Разделы:
 
    Разделы/RLMS_HSE_AIDS
