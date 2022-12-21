@@ -23,7 +23,7 @@ Welcome to RLMS-HSE's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Разделы:
-   Разделы/RLMS-HSE_AIDS
+   Разделы/RLMS-HSE_AIDS.ipynb
 
    
 
