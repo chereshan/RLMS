@@ -185,7 +185,7 @@ def FAST_variable_hh(path):
     
 # Далее реализовано лишь для индивидов и без FAST-префикса
 #==========================================================================================
-def good_namer(year):
+def good_namer(year, var='ind'):
     # Она должна быть FAST
     # Должно быть уточнение, что это только для индивидов
     """
@@ -195,12 +195,19 @@ def good_namer(year):
     ---------
     year : ineger
         Год волны исследования.
+    var: string
+        Если значение 'ind' ...
+        Если значение 'hh' ...
     
     Notes
     -----
     # Написать про FAST-функции
     """
-    save=FAST_INDS_DFS[year].copy(deep=1)
+    if var=='ind':
+        save=FAST_INDS_DFS[year].copy(deep=1)
+    if var=='hh':
+        save=FAST_HH_DFS[year].copy(deep=1)
+        
     for i in save.columns:
         bad=waves_dict[year][1].lower()
         if 'id' in i:
@@ -212,7 +219,7 @@ def good_namer(year):
     return save
 
 #==========================================================================================
-def good_namer_period(period):
+def namer_period(period, var='ind'):
     """
     Возвращает словарь фреймов данных, с переименованными атрибутами (убран префикс волны).
     
@@ -230,7 +237,7 @@ def good_namer_period(period):
         if (i<1994) or (i==1997) or (i==1999):
             print('Волны {0} года не существует.'.format(i))
             continue
-        dict_ind_period[i]=good_namer(i)
+        dict_ind_period[i]=good_namer(i,var)
         print('Исправлен ',i)
     return dict_ind_period
 #==========================================================================================
@@ -247,29 +254,56 @@ def good_namer_period(period):
 
 
 
-
-
 #==========================================================================================
-def corrector(year):
-    save=good_namer(year)
-    save.loc[:,'marst']=save.loc[:,'marst'].cat.rename_categories({'Bдовец (вдова)':'Вдовец (вдова)'})
+def corrector(year, var='ind'):
+    """
+    Возвращает словарь фреймов данных, с переименованными атрибутами (убран префикс волны).
+    
+    Параметры
+    ---------
+    period : list
+        Список волн.
+    
+    Notes
+    -----
+    # Написать про FAST-функции
+    """
+    save=good_namer(year,var)
+    if var=='ind':
+        save.loc[:,'marst']=save.loc[:,'marst'].cat.rename_categories({'Bдовец (вдова)':'Вдовец (вдова)'})
+    if var=='hh':
+        pass
     return save
 #==========================================================================================
-def corrector_period(period):
+def corrector_period(period,var='ind'):
+    """
+    Возвращает словарь фреймов данных, с переименованными атрибутами (убран префикс волны).
+    
+    Параметры
+    ---------
+    period : list
+        Список волн.
+    
+    Notes
+    -----
+    # Написать про FAST-функции
+    """
     dict_ind_period={}
     for i in period:
         if (i<1994) or (i==1997) or (i==1999):
             print('Волны {0} года не существует.'.format(i))
             continue
-        dict_ind_period[i]=corrector(i)
+        dict_ind_period[i]=corrector(i,var)
         print('Исправлен ',i)
     return dict_ind_period
 #==========================================================================================
 def FAST_corrector_ind():
     global FAST_CORRECTED_INDS_DFS
-    FAST_CORRECTED_INDS_DFS=corrector_period(waves_dict.keys())
+    FAST_CORRECTED_INDS_DFS=corrector_period(waves_dict.keys(),var='ind')
 #==========================================================================================
-
+def FAST_corrector_hh():
+    global FAST_CORRECTED_HH_DFS
+    FAST_CORRECTED_HH_DFS=corrector_period(waves_dict.keys(),var='hh')
 
 
 
