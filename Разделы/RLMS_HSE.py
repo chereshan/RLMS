@@ -298,10 +298,34 @@ def corrector_period(period,var='ind'):
     return dict_ind_period
 #==========================================================================================
 def FAST_corrector_ind():
+    """
+    Возвращает словарь фреймов данных, с переименованными атрибутами (убран префикс волны).
+    
+    Параметры
+    ---------
+    period : list
+        Список волн.
+    
+    Notes
+    -----
+    # Написать про FAST-функции
+    """
     global FAST_CORRECTED_INDS_DFS
     FAST_CORRECTED_INDS_DFS=corrector_period(waves_dict.keys(),var='ind')
 #==========================================================================================
 def FAST_corrector_hh():
+    """
+    Возвращает словарь фреймов данных, с переименованными атрибутами (убран префикс волны).
+    
+    Параметры
+    ---------
+    period : list
+        Список волн.
+    
+    Notes
+    -----
+    # Написать про FAST-функции
+    """
     global FAST_CORRECTED_HH_DFS
     FAST_CORRECTED_HH_DFS=corrector_period(waves_dict.keys(),var='hh')
 
