@@ -2,6 +2,9 @@
 import pandas as pd
 import os
 import numpy as np
+import sys
+import requests
+import zipfile
 # import matplotlib.pyplot as plt
 # import statsmodels.formula.api as smf
 
@@ -33,9 +36,57 @@ waves_dict={1994:[5,'A'],
            2020:[29,'Y'],
            2021:[30,'Z'] 
            }
-
 #==========================================================================================
-def download_wave_ind(year,path=r'C:\Users\user\Desktop\Saved\Репрезентативная выборка 06.09.2022'):
+def download_rlms_db(year='all', path=os.getcwd(), var='all', del_zip=True):
+    """
+    Скачивает в выбранный путь (или в текущую директорию) базу данных RLMS. 
+    
+    Параметры
+    ---------
+    year : integer, list, string, optional
+        (default 'all')
+        Год волны исследования, или список лет исследования.
+        Если 'all', то скачивают базу данных полностью. 
+    path : string, optional
+        (default 'active_dir')
+        Директория загрузки базы данных исследования.
+    del_zip : bool, optional
+        (default True)
+        Если True, то удаляет скачанный архив после разархивирования. 
+        Если False, то не удаляет архив после разархивирования. 
+    var : string, optional
+        (default 'all')
+        Если 'hh', то загружает только данные домохозяйств. 
+        Если 'ind', то загружает только данные индивидов. 
+    verbose : bool, optional
+        (default False)
+        Если True, то отображает прогресс работы функции. 
+        Если False, то не отображает прогресс работы функции. 
+    """
+    
+    
+    base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
+    link = 'https://disk.yandex.ru/d/q8w4Od9tPqPl5Q'  # Сюда вписываете вашу ссылку
+    
+    # Получаем загрузочную ссылку
+    final_url = base_url + 'public_key=' + link
+    response = requests.get(final_url)
+    download_url = response.json()['href']
+    
+    if path==os.getcwd():
+        path=''
+    
+    download_response = requests.get(download_url)
+    with open(f'{path}archive_rlms.zip', 'wb') as f:   # Здесь укажите нужный путь к файлу
+        f.write(download_response.content)
+        
+    with zipfile.ZipFile(f'{path}archive_rlms.zip', 'r') as zip_ref:
+        zip_ref.extractall()
+    
+    if del_zip==True:
+        os.remove('archive_rlms.zip')
+#==========================================================================================
+def read_wave_ind(year,path=os.getcwd()+'\\RLMS_db'):
     """
     Загрузка выбранной волны инидвидуальных данных из выбранной директории на диске.
     
@@ -46,6 +97,7 @@ def download_wave_ind(year,path=r'C:\Users\user\Desktop\Saved\Репрезент
     path : string
         Директория волн исследования.
     """
+    
     if (year<1994) or (year==1997) or (year==1999):
         print('Волны {0} года не существует.'.format(year))
     else:
@@ -54,7 +106,7 @@ def download_wave_ind(year,path=r'C:\Users\user\Desktop\Saved\Репрезент
     
 #==========================================================================================
  # Загрузка в словарь нескольких волн исследования
-def download_period_ind(period,path):
+def read_period_ind(period,path=os.getcwd()+'\\RLMS_db'):
     """
     Загрузка списка с выбранными волнами данных индивидов из выбранной директории на диске.
     
@@ -70,13 +122,13 @@ def download_period_ind(period,path):
         if (i<1994) or (i==1997) or (i==1999):
             print('Волны {0} года не существует.'.format(i))
             continue
-        dict_ind_period[i]=download_wave_ind(i,path)
+        dict_ind_period[i]=read_wave_ind(i,path)
         print('Загружен ',i)
     return dict_ind_period
 
 #==========================================================================================
 # Загрузка данных для работы FAST-функций
-def FAST_variable_ind(path):
+def FAST_variable_ind(path=os.getcwd()+'\\RLMS_db'):
     """
     Функция, загружающая в среду словарь всех волн исследования индивидов, и сохраняющая его как глобальную переменную.
     
@@ -90,14 +142,42 @@ def FAST_variable_ind(path):
     #Написать про FAST-функции
     """
     global FAST_INDS_DFS
-    FAST_INDS_DFS=download_period_ind(list(range(1993,2022)),path=path)
+    FAST_INDS_DFS=read_period_ind(list(range(1993,2022)),path=path)
 #==========================================================================================
-
-
-
-
-
-
+def read_rlms(year, var, path=os.getcwd()+'\\RLMS_db',verbose=True):
+    """
+    Читает уже загруженный датасет. 
+    ---------
+    year : integer, list, string
+        (default 'all')
+        Если 'all', то загружает все волны исследования. 
+    path : string, optional
+        (default )
+        Директория базы данных
+    var: string
+        (default )
+        Если 'all' 
+        Если 'hh'
+        Если 'ind'
+    """
+    if type(year)==int:
+        if var=='hh':
+            return read_wave_hh(year=year, path=path, verbose=verbose)
+        if var=='ind':
+            return read_wave_ind(year=year, path=path, verbose=verbose)
+    if type(year)==list:
+        if var=='hh':
+            return read_period_ind(period=year,path=path, verbose=verbose)
+        if var=='ind':
+            return read_period_ind(period=year,path=path, verbose=verbose)
+    if year=='all':
+        if var=='hh':
+            return FAST_variable_hh(path=path, verbose=verbose)
+        if var=='ind':
+            return FAST_variable_ind(path=path, verbose=verbose)
+#==========================================================================================        
+        
+        
 
 
 
@@ -111,7 +191,7 @@ def FAST_variable_ind(path):
 #==========================================================================================
 #==Аналогично для ДХ=======================================================================
 #=Загрузка фрейма данных волны выбранного года из папки
-def download_wave_hh(year,path=r'C:\Users\user\Desktop\Saved\Репрезентативная выборка 06.09.2022'):
+def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db'):
     """
     Загрузка выбранной волны (года) данных домашних хозяйств из выбранной директории на диске.
     
@@ -133,7 +213,7 @@ def download_wave_hh(year,path=r'C:\Users\user\Desktop\Saved\Репрезент�
         return pd.read_spss(r'{0}\{1}-я волна\ДОМОХОЗЯЙСТВА\{2}'.format(path,waves_dict[year][0],filename))
 #==========================================================================================
 # Загрузка в словарь нескольких волн исследования
-def download_period_hh(period,path):
+def read_period_hh(period,path=os.getcwd()+'\\RLMS_db'):
     """
     Загрузка списка с выбранными волнами данных домашних хозяйств из выбранной директории на диске.
     
@@ -149,11 +229,11 @@ def download_period_hh(period,path):
         if (i<1994) or (i==1997) or (i==1999):
             print('Волны {0} года не существует.'.format(i))
             continue
-        dict_hh_period[i]=download_wave_hh(i,path)
+        dict_hh_period[i]=read_wave_hh(i,path)
         print('Загружен ',i)
     return dict_hh_period
 #==========================================================================================
-def FAST_variable_hh(path):
+def FAST_variable_hh(path=os.getcwd()+'\\RLMS_db'):
     """
     Функция, загружающая в среду словарь всех волн исследования домашних хозяйств, и сохраняющий как глобальную переменную.
     
@@ -167,22 +247,29 @@ def FAST_variable_hh(path):
     #Написать про FAST-функции
     """
     global FAST_HH_DFS
-    FAST_HH_DFS=download_period_hh(list(range(1993,2022)),path=path)
+    FAST_HH_DFS=read_period_hh(list(range(1993,2022)),path=path)
 #==========================================================================================   
+def FAST_variable_ind(path=os.getcwd()+'\\RLMS_db'):
+    """
+    Функция, загружающая в среду словарь всех волн исследования индивидов, и сохраняющий их как глобальную переменную.
+    
+    Параметры
+    ---------
+    path : string
+        Директория волн исследования.
+    
+    Notes
+    -----
+    #Написать про FAST-функции
+    """
+    global FAST_IND_DFS
+    FAST_IND_DFS=download_period_ind(list(range(1993,2022)),path=path)
+#==========================================================================================  
+    
 
     
-      
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
 # Далее реализовано лишь для индивидов и без FAST-префикса
 #==========================================================================================
 def good_namer(year, var='ind'):
@@ -193,7 +280,7 @@ def good_namer(year, var='ind'):
     
     Параметры
     ---------
-    year : ineger
+    year : integer
         Год волны исследования.
     var: string
         Если значение 'ind' ...
