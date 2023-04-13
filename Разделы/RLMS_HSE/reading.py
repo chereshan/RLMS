@@ -368,7 +368,7 @@ def columns_renamer(df,year=None, verbose=True):
         elif any(df_copy.columns.str.contains(pat='redid_h')):
             year=df_copy.columns[df_copy.columns.str.contains(pat='redid_h')][0][0]
         else:
-            print('В фрейме нет стобцов *redid_i или *redid_i для определения префикса волны. Прямо пропишите в аргумент year год волны или буквенный код волны')
+            print('В фрейме нет столбцов *redid_i или *redid_i для определения префикса волны. Прямо пропишите в аргумент year год волны или ее буквенный код')
             
     if year!=None:
         if type(year)==int:
@@ -386,6 +386,11 @@ def columns_renamer(df,year=None, verbose=True):
     if verbose==True:
         print(r'Переименован {0}'.format(reverse_waves_dict[year.upper()][0]))
     return df_copy
+#==========================================================================================
+
+
+
+
 #==========================================================================================
 """
 ИСПРАВЛЕНИЕ (ЗАВЕДОМО ИЛИ НЕТ) ОШИБОЧНЫХ ОТВЕТОВ

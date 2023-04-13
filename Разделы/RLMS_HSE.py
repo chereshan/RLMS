@@ -86,6 +86,10 @@ def download_rlms_db(year='all', path=os.getcwd(), var='all', del_zip=True):
     if del_zip==True:
         os.remove('archive_rlms.zip')
 #==========================================================================================
+"""
+ЧТЕНИЕ ИНДИВИДУАЛЬНЫХ ДАННЫХ
+"""
+#==========================================================================================
 def read_wave_ind(year,path=os.getcwd()+'\\RLMS_db'):
     """
     Загрузка выбранной волны инидвидуальных данных из выбранной директории на диске.
@@ -143,51 +147,13 @@ def FAST_variable_ind(path=os.getcwd()+'\\RLMS_db'):
     """
     global FAST_INDS_DFS
     FAST_INDS_DFS=read_period_ind(list(range(1993,2022)),path=path)
+     
+        
+
 #==========================================================================================
-def read_rlms(year, var, path=os.getcwd()+'\\RLMS_db',verbose=True):
-    """
-    Читает уже загруженный датасет. 
-    ---------
-    year : integer, list, string
-        (default 'all')
-        Если 'all', то загружает все волны исследования. 
-    path : string, optional
-        (default )
-        Директория базы данных
-    var: string
-        (default )
-        Если 'all' 
-        Если 'hh'
-        Если 'ind'
-    """
-    if type(year)==int:
-        if var=='hh':
-            return read_wave_hh(year=year, path=path, verbose=verbose)
-        if var=='ind':
-            return read_wave_ind(year=year, path=path, verbose=verbose)
-    if type(year)==list:
-        if var=='hh':
-            return read_period_ind(period=year,path=path, verbose=verbose)
-        if var=='ind':
-            return read_period_ind(period=year,path=path, verbose=verbose)
-    if year=='all':
-        if var=='hh':
-            return FAST_variable_hh(path=path, verbose=verbose)
-        if var=='ind':
-            return FAST_variable_ind(path=path, verbose=verbose)
-#==========================================================================================        
-        
-        
-
-
-
-
-
-
-
-
-
-
+"""
+ЧТЕНИЕ ДАННЫХ ДОМОХОЗЯЙСТВ
+"""
 #==========================================================================================
 #==Аналогично для ДХ=======================================================================
 #=Загрузка фрейма данных волны выбранного года из папки
@@ -201,10 +167,6 @@ def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db'):
         Год волны исследования.
     path : string
         Директория волн исследования.
-    
-    Notes
-    -----
-    #Написать про FAST-функции
     """
     if (year<1994) or (year==1997) or (year==1999):
         print('Волны {0} года не существует.'.format(year))
@@ -266,7 +228,39 @@ def FAST_variable_ind(path=os.getcwd()+'\\RLMS_db'):
     FAST_IND_DFS=download_period_ind(list(range(1993,2022)),path=path)
 #==========================================================================================  
     
-
+#==========================================================================================
+def read_rlms(year, var, path=os.getcwd()+'\\RLMS_db',verbose=True):
+    """
+    Читает уже загруженный датасет. 
+    ---------
+    year : integer, list, string
+        (default 'all')
+        Если 'all', то загружает все волны исследования. 
+    path : string, optional
+        (default )
+        Директория базы данных
+    var: string
+        (default )
+        Если 'all' 
+        Если 'hh'
+        Если 'ind'
+    """
+    if type(year)==int:
+        if var=='hh':
+            return read_wave_hh(year=year, path=path, verbose=verbose)
+        if var=='ind':
+            return read_wave_ind(year=year, path=path, verbose=verbose)
+    if type(year)==list:
+        if var=='hh':
+            return read_period_ind(period=year,path=path, verbose=verbose)
+        if var=='ind':
+            return read_period_ind(period=year,path=path, verbose=verbose)
+    if year=='all':
+        if var=='hh':
+            return FAST_variable_hh(path=path, verbose=verbose)
+        if var=='ind':
+            return FAST_variable_ind(path=path, verbose=verbose)
+#==========================================================================================   
     
     
 
