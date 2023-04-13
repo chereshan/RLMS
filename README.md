@@ -1,5 +1,5 @@
 # RLMS
-Family of Python Packages for working witch RLMS-HSE dataset 
+Family of Python modules for research with RLMS-HSE datasets 
 
 Data Sourse:
 
