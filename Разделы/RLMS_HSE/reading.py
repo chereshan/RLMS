@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import requests
 import zipfile
+import pyreadstat
 # import matplotlib.pyplot as plt
 # import statsmodels.formula.api as smf
 
@@ -62,6 +63,32 @@ reverse_waves_dict={'A': [1994, 5],
                     'X': [2019, 28],
                     'Y': [2020, 29],
                     'Z': [2021, 30]}
+double_reverse_waves_dict={5: [1994, 'A'],
+ 6: [1995, 'B'],
+ 7: [1996, 'C'],
+ 8: [1998, 'D'],
+ 9: [2000, 'E'],
+ 10: [2001, 'F'],
+ 11: [2002, 'G'],
+ 12: [2003, 'H'],
+ 13: [2004, 'I'],
+ 14: [2005, 'J'],
+ 15: [2006, 'K'],
+ 16: [2007, 'L'],
+ 17: [2008, 'M'],
+ 18: [2009, 'N'],
+ 19: [2010, 'O'],
+ 20: [2011, 'P'],
+ 21: [2012, 'Q'],
+ 22: [2013, 'R'],
+ 23: [2014, 'S'],
+ 24: [2015, 'T'],
+ 25: [2016, 'U'],
+ 26: [2017, 'V'],
+ 27: [2018, 'W'],
+ 28: [2019, 'X'],
+ 29: [2020, 'Y'],
+ 30: [2021, 'Z']}
 #==========================================================================================
 def download_rlms_db(year='all', path=os.getcwd(), var='all', del_zip=True, verbose=True):
     """
@@ -86,7 +113,7 @@ def download_rlms_db(year='all', path=os.getcwd(), var='all', del_zip=True, verb
         Если 'ind', то загружает только данные индивидов. 
     verbose : bool, optional
         (default False)
-        Если True, то отображает прогресс работы функции. 
+        Если True, то выволит прогресс работы функции. 
         Если False, то не отображает прогресс работы функции. 
     """
     
@@ -208,7 +235,7 @@ def FAST_variable_ind(path=os.getcwd()+'\\RLMS_db', verbose=True, renaming=False
 """
 #==========================================================================================    
 #==========================================================================================
-def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=False):
+def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=False, what='representative'):
     """
     Загрузка выбранной волны (года) данных домашних хозяйств из выбранной директории на диске.
     
@@ -226,7 +253,10 @@ def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=False)
         (default False)
         Если True, то сразу после чтения производит удаление префиксов кодов волн у столбцов. 
         Если False, то этого не делает
+    what : ???????
     """
+    if what=='full':
+        path=path+'_full'
     if (year<1994) or (year==1997) or (year==1999):
         if verbose==True:
             print('Волны {0} года не существует.'.format(year))
@@ -237,7 +267,8 @@ def read_wave_hh(year,path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=False)
         if verbose==True:
             print('Загружен {0}'.format(year))
         if renaming==True:
-            df_fin=columns_renamer(df_fin,year=year,verbose=verbose)    
+            df_fin=columns_renamer(df_fin,year=year,verbose=verbose)
+            df_fin['year']=reverse_waves_dict[FAST_HH_DFS[year].columns[0][0].upper()][0]
         return df_fin        
     
     
@@ -301,23 +332,22 @@ def read_rlms(year, var, path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=Fal
     ---------
     year : integer, list, string
         (default 'all')
-        Если 'all', то загружает все волны исследования. 
+        Если 'all', то считывает все волны исследования. Иначе считывает либо год, либо выбранный лист лет. 
     path : string, optional
-        (default )
-        Директория базы данных
+        (default os.getcwd()+'\\RLMS_db'и)
+        Директория базы данных. 
     var: string
-        (default )
-        Если 'all' 
-        Если 'hh'
-        Если 'ind'
+        Если 'hh', то читает фрейм данных домашних хозяйств. 
+        Если 'ind', то читает фрейм данных индивидов. 
+        Если 'all', то читает оба фрейма данных. 
     verbose : bool, optional
         (default True)
         Если True, то отображает прогресс работы функции. 
         Если False, то не отображает прогресс работы функции. 
     renaming : bool, optional
         (default False)
-        Если True, то сразу после чтения производит удаление префиксов кодов волн у столбцов. 
-        Если False, то этого не делает
+        Если True, то сразу после чтения производит удаление префиксов кодов волн у столбцов, т.е. оссуществляет переименование. 
+        Если False, то этого не осуществляется.
     """
     if type(year)==int:
         if var=='hh':
@@ -341,7 +371,7 @@ def read_rlms(year, var, path=os.getcwd()+'\\RLMS_db',verbose=True, renaming=Fal
 #==========================================================================================        
 # Далее реализовано лишь для индивидов и без FAST-префикса
 #==========================================================================================
-def columns_renamer(df,year=None, verbose=True):
+def columns_renamer(df, year=None, verbose=False):
     """
     Принимает фрейм данных RLMS и возвращает тот же самый фрейм с переименованными колонками, у которых убраны префиксы волн (за исключением идентификационных). Все строки переводит в строчные. Это вызов столбцов по сквозному коду без префикса.
     
@@ -349,17 +379,17 @@ def columns_renamer(df,year=None, verbose=True):
     ---------
     df : DataFrame
        Фрейм данных волны исследования
-    year: integer, string, optional
+    year : integer, string, optional
         Если в датафрейме нет колонки *redid_h или *redid_i, где первый символ - это кодовая буква волны исследования, то прямое обозначение года волны или буквы волны может потребоваться для работы со срезом данных. 
     verbose : bool, optional
-        (default True)
+        (default False)
         Если True, то отображает прогресс работы функции. 
         Если False, то не отображает прогресс работы функции.
     """
     df_copy=df.copy(deep=1)
     exceps=['redid_h','id_h','_origsm','_hhwgt',
            'idind','redid_i','id_i','_inwgt',
-           'region','psu','status','popul','site','ssu']
+           'region','psu','status','popul','site','ssu', 'year']
     
     df_copy=df_copy.rename(columns={i:i.lower() for i in list(df_copy.columns)})
     if year==None: 
@@ -387,118 +417,194 @@ def columns_renamer(df,year=None, verbose=True):
         print(r'Переименован {0}'.format(reverse_waves_dict[year.upper()][0]))
     return df_copy
 #==========================================================================================
-
-
-
-
-#==========================================================================================
 """
 ИСПРАВЛЕНИЕ (ЗАВЕДОМО ИЛИ НЕТ) ОШИБОЧНЫХ ОТВЕТОВ
 """        
 #==========================================================================================
 # Обнаруженные ошибочные ответы
-errors_found={'Bдовец (вдова)':'Вдовец (вдова)'
+# ['g6', 'g4', 'g1.1', 'g5', 'g1.2', 'g2', 'g3', 'g7']
+errors_found={'marst':{'Bдовец (вдова)':'Вдовец (вдова)'},
+              'g7':None,
+              'g6':{'ЗНАЧИТ. БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ,ЧЕМ БОЛЬШИНСТВО РЕСПОНД.':'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕС-ТОВ':'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    '‘ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНД’':'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШ. РЕСПОНДЕНТОВ':'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНД':'ЗНАЧИТЕЛЬНО БОЛЕЕ ИСКРЕНЕН И ОТКРЫТ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    
+                    'ИСКРЕНЕН И ОТКРЫТ ТАК ЖЕ, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'ИСКРЕНЕН И ОТКРЫТ ТАК ЖЕ, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    '‘ИСКРЕНЕН И ОТКРЫТ ТАК ЖЕ, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ’':'ИСКРЕНЕН И ОТКРЫТ ТАК ЖЕ, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'НЕТ ОТВЕТА':'НЕТ ОТВЕТА',
+                    '‘НЕТ ОТВЕТА’':'НЕТ ОТВЕТА',
+                    'ОЧЕНЬ ЗАКРЫТЫЙ, НЕИСКРЕННИЙ':'ОЧЕНЬ ЗАКРЫТЫЙ, НЕИСКРЕННИЙ',
+                   '‘ОЧЕНЬ ЗАКРЫТЫЙ, НЕИСКРЕННИЙ’':'ОЧЕНЬ ЗАКРЫТЫЙ, НЕИСКРЕННИЙ'},
+              'g4':{'‘ИНОГДА НЕРВНИЧАЛ’':'ИНОГДА НЕРВНИЧАЛ',
+                    '‘НЕРВНИЧАЛ’':'НЕРВНИЧАЛ',
+                    '‘НЕТ ОТВЕТА’':'НЕТ ОТВЕТА',
+                    '‘ЧУВСТВОВАЛ СЕБЯ СВОБОДНО’':'ЧУВСТВОВАЛ СЕБЯ СВОБОДНО'
+              },
+              'g1.1':None,
+              'g1.2':None,
+              'g5':{'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСВО РЕСПОНДЕНТОВ':'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'ЗНАЧИТЕЛЬНО СООБРАЗИТЕЛЬНЕЕ, ЧЕМ БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ПОВТОРНОМ ЧТЕНИИ ВОПРОСОВ':'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ПОВТОРНОМ ЧТЕНИИ ВОПРОСОВ',
+                    'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ПОВТОРНОМ ЧТЕНИИ ВОПРОСОВ':'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ПОВТОРНОМ ЧТЕНИИ ВОПРОСОВ',
+                    'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ДОПОЛНИТЕЛЬНЫХ ОБЪЯСНЕНИЯХ':'НЕСООБРАЗИТЕЛЬНЫЙ, НУЖДАЛСЯ В ПОВТОРНОМ ЧТЕНИИ ВОПРОСОВ',
+                    'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ':'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ',
+                    'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ':'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ',
+                    'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ':'ОЧЕНЬ НЕСООБРАЗИТЕЛЬНЫЙ',
+                    'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ',
+                    'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ':'СООБРАЗИТЕЛЕН, КАК БОЛЬШИНСТВО РЕСПОНДЕНТОВ'
+              },
+              'g2':None,
+              'g3':None
+             
              }
 
-
-
-
-
-
-
-
-
-
-
-# Далее идут корректоры, которые нужно было бы интегрировать в чтение
-
-
-
-
-
-
+#==========================================================================================
+"""
+ЧТЕНИЕ СТОРОННИХ ДАННЫХ: Blanciforti86, USMeatConsump
+"""        
+#==========================================================================================
+# import RLMS_HSE.reading as readrlms
+# from importlib import reload  # Python 3.4+
+# readrlms = reload(readrlms)
+#==========================================================================================
+#==========================================================================================
+"""
+КОРРЕКТИРОВКА НЕКОРРЕКТНЫХ ОТВЕТОВ
+"""        
+#==========================================================================================
 
 #==========================================================================================
-def corrector(year, var='ind'):
+# Далее идут корректоры, которые нужно было бы интегрировать в чтение
+# Надо, чтобы все категории были в .upper(), не имели первых пробелов, были одинаково написаны
+#==========================================================================================
+def cat_corrector(df,by= ['g6', 'g4', 'g1.1', 'g5', 'g1.2', 'g2', 'g3','g7']):
     """
-  ?????????????????????????????????????????????????????//
+
     
     Параметры
     ---------
-    period : list
-        Список волн.
-    var : string
+    df : DataFrame
+        Фрейм данных, ответы в котором будут откорректированы. 
         
     """
-    save=good_namer(year,var)
-    if var=='ind':
-        save.loc[:,'marst']=save.loc[:,'marst'].cat.rename_categories({'Bдовец (вдова)':'Вдовец (вдова)'})
-    if var=='hh':
-        pass
-    return save
+    df1=df.copy(deep=1)
+    for feature in by:
+        if feature in df1.columns:
+            if errors_found.get(feature, 'not in dict')==None:
+                df1.loc[:,feature]=df1.loc[:,feature].cat.rename_categories(lambda x: x.lstrip().upper().replace('‘','').replace('’',''))
+            elif errors_found.get(feature, 'not in dict')=='not in dict':
+                pass
+            else:
+                df1.loc[:,feature]=df1.loc[:,feature].cat.rename_categories(lambda x: x.lstrip().upper().replace('‘','').replace('’',''))
+                df1.loc[:,feature]=df1.loc[:,feature].cat.rename_categories(errors_found[feature])
+    return df1
 #==========================================================================================
-def corrector_period(period,var='ind'):
+def check_cats(year1, df, cats=['g6', 'g4', 'g1.1', 'g5', 'g1.2', 'g2', 'g3', 'g7']):
     """
-    ????????????????????????????????????????
-    
-    Параметры
-    ---------
-    period : list
-        Список волн.
-    
-    Notes
-    -----
-    # Написать про FAST-функции
+    Проверяет пользовательский словарь волн исследования (с переименованными столюцами) на факт того, что категории выбранных фичей данного года совпадают с фичами других лет в словаре датафреймов. Даная функция необходима для корректировки несовпадающих ответов. Используется для пополнения словаря исправлений.  
     """
-    dict_ind_period={}
-    for i in period:
-        if (i<1994) or (i==1997) or (i==1999):
-            print('Волны {0} года не существует.'.format(i))
-            continue
-        dict_ind_period[i]=corrector(i,var)
-        print('Исправлен ',i)
-    return dict_ind_period
+    dict_of_cats={}
+    for year_3 in df.keys():
+        df_copy=df[year_3].copy(deep=1)
+        dict_of_cats[year_3]={}
+        for i in cats:
+            if i in df_copy.columns:
+                dict_of_cats[year_3][i]=df_copy.loc[:,i].cat.categories
+            
+    res={}
+    for feature in dict_of_cats[year1].keys():
+        res[feature]={}
+        for year2 in dict_of_cats.keys():
+
+            if feature in list(dict_of_cats[year2].keys()):
+                res[feature][year2]=(set(dict_of_cats[year1][feature])==set(dict_of_cats[year2][feature]))
+            else:
+                res[feature][year2]=np.nan
+    return pd.DataFrame(res)
 #==========================================================================================
-def FAST_corrector_ind():
+def drop_no_ans(df, by=['g6', 'g4', 'g1.1', 'g5', 'g7', 'g1.2', 'g2', 'f14', 'g3']):
     """
-    ??????????????????????????????????????????????????/
-    
-    Параметры
-    ---------
-    period : list
-        Список волн.
-    
-    Notes
-    -----
-    # Написать про FAST-функции
+    Функция дропает из датафрейма ответы вида 'нет ответа' по выбранным столбцам. 
     """
-    global FAST_CORRECTED_IND_DFS
-    FAST_CORRECTED_IND_DFS=corrector_period(waves_dict.keys(),var='ind')
+    df_f=df.copy()
+    nones=['ЗАТРУДНЯЮСЬ ОТВЕТИТЬ', 'НЕТ ОТВЕТА', 'ОТКАЗ ОТ ОТВЕТА',
+          '‘ЗАТРУДНЯЮСЬ ОТВЕТИТЬ’', '‘НЕТ ОТВЕТА’', '‘ОТКАЗ ОТ ОТВЕТА’',
+          ' ЗАТРУДНЯЮСЬ ОТВЕТИТЬ', ' НЕТ ОТВЕТА', ' ОТКАЗ ОТ ОТВЕТА',
+          'ОТКАЗ', 999998.0]
+    if by==None:
+        for column in df.columns:
+            for none in nones:
+                df_f=df_f.loc[df_f.loc[:,column]!=none]
+            if df_f.loc[:,column].dtype.name=='category':
+                df_f.loc[:,column]=df_f.loc[:,column].cat.remove_unused_categories()
+    else:
+        for column in by:
+            if column in df_f.columns:
+                for none in nones:
+                    df_f=df_f.loc[df_f.loc[:,column]!=none] 
+                if df_f.loc[:,column].dtype.name=='category':
+                    df_f.loc[:,column]=df_f.loc[:,column].cat.remove_unused_categories()
+    return df_f
 #==========================================================================================
-def FAST_corrector_hh():
+def isfloat(num):
     """
-    ???????????????????????????????????????????????????//
-    
-    Параметры
-    ---------
-    period : list
-        Список волн.
-    
-    Notes
-    -----
-    # Написать про FAST-функции
+    Функция, которая проверяет конвертируема ли строка в float.
     """
-    global FAST_CORRECTED_HH_DFS
-    FAST_CORRECTED_HH_DFS=corrector_period(waves_dict.keys(),var='hh')
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+#==========================================================================================
+def convert_to_float(df, by=['g6', 'g4', 'g1.1', 'g5', 'g7', 'g1.2', 'g2', 'f14', 'g3']):
+    """
+    После успешного дропа всех "нет ответа" тектсовые фичи отсаются текстовыми, а численные имеют только численные значения. Это можно использовать для конвертации всех фич, которые могут быть конвертированы в численные. 
+    """
+    df_f=df.copy()
+    if by==None:
+        for column in df.columns:
+            if df_f.loc[:,column].apply(isfloat).all():
+                df_f.loc[:,column]=df_f.loc[:,column].astype(str).astype(float)
+                
+    else:
+        for column in by:
+            if column in df_f.columns:
+                if df_f.loc[:,column].apply(isfloat).all():
+                    df_f.loc[:,column]=df_f.loc[:,column].astype(str).astype(float)
+    return df_f
 
-
-
-
-
-
-
-
-
+#==========================================================================================
+def full_preprocessing(df, features):
+    """
+    Должно
+    """
+    df_f=df.loc[:, features]
+    df_f=cat_corrector(df_f, by=features)
+    df_f=drop_no_ans(df_f, by=features)
+    df_f=convert_to_float(df_f, by=features)
+    return df_f
+    
+#==========================================================================================
+"""
+ПАНЕЛЬНЫЕ ДАННЫЕ
+"""
+#==========================================================================================
+def panel_dict(df_dict, year1, year2):
+    """
+    
+    """
+    id_col=waves_dict[year1][1].lower()+'id_h'
+    sets=[set(df_dict[year][id_col].dropna().astype(int).values) for year in range(year1,year2+1)]
+    panel_indexes=list(set.intersection(*sets))
+    panel_dict={}
+    for year in range(year1,year2+1):
+        panel_dict[year]=df_dict[year][df_dict[year][id_col].isin(panel_indexes)]
+    return panel_dict
+#==========================================================================================
 
 
 
@@ -508,7 +614,7 @@ def FAST_corrector_hh():
 Сквозной поисковик вопросов
 """
 #==========================================================================================
-def wave_scanner(codes,reverse=False):
+def wave_scanner(codes,reverse=False, where='ind'):
     """
     Возвращает словарь волн исследования, в которых есть данные атрибуты.
     
@@ -523,11 +629,15 @@ def wave_scanner(codes,reverse=False):
         
     Notes
     -----
-
+    ОЧЕНЬ СЫРАЯ!
     """
     # Не написано reverse
     year_book={}
-    nnn=FAST_IND_DFS
+    if where=='ind':
+        nnn=FAST_IND_DFS
+    elif where=='hh':
+        nnn=FAST_HH_DFS
+    
     if reverse:
         pass
     
@@ -542,6 +652,7 @@ def wave_scanner(codes,reverse=False):
     
     if reverse==False and type(codes)==dict:
         reverse_dict={l[i]:k for k, l in codes.items() for i in range(len(l))}
+        return reverse_dict
         
     # Написать позже вариант для словаря
     
